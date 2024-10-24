@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" x-data="{ showModal: false }">
+<div class="container mx-auto px-4 py-6" x-data="{ showModal: false, projectId: null }">
     <h1 class="text-3xl font-bold mb-6 text-center">Project Management</h1>
 
     <div class="overflow-x-auto">
@@ -25,24 +25,14 @@
                 {{ $project->status == 'Completed' ? 'bg-green-500' : ($project->status == 'In Progress' ? 'bg-blue-500' : 'bg-red-500') }} text-xs md:text-sm">
                             {{ $project->status }}
                         </span>
-
                     </td>
-
                     <td class="py-4 px-4 border-b border-gray-200 {{ \Carbon\Carbon::now()->gt($project->deadline) ? 'text-red-500' : '' }}">
                         {{ $project->deadline ? $project->deadline->format('d-m-Y') : 'N/A' }} <!-- Handle null cases -->
                     </td>
                     <td class="py-4 px-4 border-b border-gray-200 flex space-x-2">
                         <a href="{{ route('projects.edit', $project->id) }}" class="text-blue-600 hover:underline">Edit</a>
-                        <button
-                            @click="if(confirm('Are you sure you want to delete this project?')) { document.getElementById('delete-form-{{ $project->id }}').submit(); }"
-                            class="text-red-600 hover:underline">
-                            Delete
-                        </button>
+                        <button @click="showModal = true; projectId = {{ $project->id }}" class="text-red-600 hover:underline">Delete</button>
 
-                        <form id="delete-form-{{ $project->id }}" action="{{ route('projects.destroy', $project->id) }}" method="POST" style="display: none;">
-                            @csrf
-                            @method('DELETE')
-                        </form>
                     </td>
                 </tr>
                 @endforeach
@@ -53,7 +43,22 @@
     <div class="mt-6">
         {{ $projects->links() }}
     </div>
+
+    <!-- Include the confirmation modal component -->
+    <x-confirm-modal />
+    
+    <form id="delete-form" action="" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
 </div>
 
 <script src="//unpkg.com/alpinejs" defer></script>
+<script>
+    function deleteProject() {
+        const form = document.getElementById('delete-form');
+        form.action = `/projects/${projectId}`;
+        form.submit();
+    }
+</script>
 @endsection
